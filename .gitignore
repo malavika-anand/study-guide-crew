@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+.env
+.claude
+
+# Output files
+study_guide.md
+
+# Virtual environment
+venv/
+.venv/
