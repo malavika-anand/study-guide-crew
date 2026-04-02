@@ -39,7 +39,7 @@ For the topic `"Machine Learning fundamentals"` the system produces:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/study-guide-crew.git
+git clone https://github.com/malavika-anand/study-guide-crew.git
 cd study-guide-crew
 
 # Install dependencies
