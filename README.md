@@ -6,25 +6,53 @@ An AI-powered multi-agent system built with [CrewAI](https://crewai.com) that au
 
 ## What It Does
 
-Give it any topic and four specialized AI agents collaborate to produce a full `study_guide.md` file:
+Give it any topic and four specialized AI agents collaborate inside a CrewAI Flow to produce a complete markdown study guide:
 
-| Agent | Role |
-|---|---|
-| Curriculum Designer | Outlines the 5 most important concepts in the best learning order |
-| Expert Teacher | Writes clear explanations with real-world examples |
-| Assessment Specialist | Creates a multi-section quiz with a full answer key |
-| Flashcard Maker | Produces 25 Anki-style flashcards across 3 categories |
+| Agent | Model | Role |
+|---|---|---|
+| Curriculum Designer | Groq Llama 3 8b (fast) | Outlines the 5 most important concepts in the best learning order |
+| Expert Teacher | Groq Llama 3 70b (smart) | Writes clear explanations with real-world examples |
+| Assessment Specialist | Groq Llama 3 70b (smart) | Creates a multi-section quiz with a full answer key |
+| Flashcard Maker | Groq Llama 3 70b (smart) | Produces 25 Anki-style flashcards across 3 categories |
+
+The quiz and flashcard tasks run in **parallel**, cutting total runtime significantly.
 
 ---
 
 ## Example Output
 
-For the topic `"Machine Learning fundamentals"` the system produces:
+For the topic `"Machine Learning fundamentals"` the system produces a file called `study_guide_machine_learning_fundamentals.md` containing:
 
 - A structured outline of 5 key concepts with time estimates
 - Beginner-friendly explanations with analogies and key takeaways
-- A quiz with multiple choice, short answer, and scenario-based questions
+- A quiz with multiple choice, short answer, and scenario-based questions plus a full answer key
 - 25 flashcards split across Core Definitions, Concept Connections, and Apply It categories
+
+---
+
+## How It Works
+
+The system uses a **CrewAI Flow** to orchestrate everything in four stages:
+
+```
+load_topic → run_crew → save_output → finish
+```
+
+Inside the crew, tasks run in this order:
+
+```
+Curriculum Designer → Expert Teacher → [Quiz Specialist + Flashcard Maker in parallel]
+        ↓                    ↓                          ↓
+    Outline (5          Explanations             Both outputs saved
+    concepts)           + examples               to one markdown file
+```
+
+Key concepts used:
+- **Multi-model** — simple tasks use a smaller faster model, complex writing tasks use a larger smarter one
+- **Parallel execution** — quiz and flashcard tasks run at the same time
+- **CrewAI Flow** — wraps the crew with load, run, save, and finish stages
+- **Role-playing** — each agent has a specific expert persona
+- **Sequential + async execution** — outline and explanations run first, then quiz and flashcards run together
 
 ---
 
@@ -68,7 +96,7 @@ Then run it:
 python study_crew.py
 ```
 
-Your study guide will be saved to `study_guide.md` when the agents finish.
+Your study guide will be saved as `study_guide_<topic>.md` when the flow finishes.
 
 ---
 
@@ -86,14 +114,18 @@ TOPIC = "Introduction to Python programming"
 
 ---
 
-## Changing the Model
+## Changing the Models
 
-The project uses Groq's free tier. You can swap the model at the top of the script:
+All models use Groq's free tier. You can swap them at the top of the script:
 
 ```python
-LLM = "groq/llama3-70b-8192"    # default — best quality
-LLM = "groq/mixtral-8x7b-32768" # great for long outputs
-LLM = "groq/llama3-8b-8192"     # fastest
+GROQ_FAST = "groq/llama3-8b-8192"     # used for simpler tasks — fastest
+GROQ_SMART = "groq/llama3-70b-8192"   # used for writing tasks — best quality
+```
+
+Other free options on Groq:
+```python
+"groq/mixtral-8x7b-32768"   # great for long outputs
 ```
 
 ---
@@ -102,7 +134,7 @@ LLM = "groq/llama3-8b-8192"     # fastest
 
 ```
 study-guide-crew/
-├── study_crew.py      # main script with all agents and tasks
+├── study_crew.py      # main script — agents, tasks, crew, and flow
 ├── .env               # your API key (never commit this)
 ├── .gitignore         # keeps .env and output files out of git
 └── README.md          # this file
@@ -110,29 +142,22 @@ study-guide-crew/
 
 ---
 
-## How It Works
+## What Gets Generated
 
-This project is built on the concepts taught in the [DeepLearning.AI Multi AI Agents with CrewAI](https://learn.deeplearning.ai) course. The four agents run sequentially, with each agent passing its output to the next:
+Running the script produces a file named after your topic, for example:
 
 ```
-Curriculum Designer → Expert Teacher → Assessment Specialist → Flashcard Maker
-        ↓                    ↓                   ↓                    ↓
-    Outline (5          Explanations          Quiz with            25 Anki-style
-    concepts)           + examples           answer key            flashcards
+study_guide_machine_learning_fundamentals.md
 ```
 
-Key CrewAI concepts used:
-- **Role-playing** — each agent has a specific expert persona
-- **Focus** — each agent does exactly one job
-- **Sequential execution** — output of each task feeds the next
-- **File output** — final result saved to `study_guide.md`
+The file contains all four sections in order: outline, explanations, quiz, and flashcards.
 
 ---
 
 ## Built With
 
-- [CrewAI](https://github.com/joaomdmoura/crewAI) — multi-agent framework
-- [Groq](https://groq.com) — free LLM inference (LLaMA 3, Mixtral)
+- [CrewAI](https://github.com/joaomdmoura/crewAI) — multi-agent framework with Flows support
+- [Groq](https://groq.com) — free LLM inference (LLaMA 3 8b and 70b)
 - [python-dotenv](https://github.com/theskumar/python-dotenv) — environment variable management
 
 ---
